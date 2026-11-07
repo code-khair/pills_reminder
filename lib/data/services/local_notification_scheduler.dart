@@ -37,7 +37,11 @@ class LocalNotificationScheduler implements ReminderScheduler {
       priority: Priority.high,
       category: AndroidNotificationCategory.reminder,
       playSound: true,
+      sound: RawResourceAndroidNotificationSound(
+          AppConstants.notificationSound),
       enableVibration: true,
+      // Mengikuti volume alarm agar lebih jarang tertekan mode senyap.
+      audioAttributesUsage: AudioAttributesUsage.alarm,
     ),
     iOS: DarwinNotificationDetails(
       presentAlert: true,
@@ -81,6 +85,11 @@ class LocalNotificationScheduler implements ReminderScheduler {
           AppConstants.channelName,
           description: AppConstants.channelDescription,
           importance: Importance.max,
+          playSound: true,
+          sound: RawResourceAndroidNotificationSound(
+              AppConstants.notificationSound),
+          enableVibration: true,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
         ));
   }
 

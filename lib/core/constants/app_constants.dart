@@ -11,7 +11,13 @@ class AppConstants {
   static const String nextIdKey = 'next_medicine_id';
 
   // Notifikasi
-  static const String channelId = 'pills_reminder_channel';
+  // ID diubah ke v3 karena pengaturan suara sebuah channel tidak dapat
+  // diubah setelah channel dibuat di HP. ID baru memaksa channel baru
+  // (dengan nada pill_reminder) terbentuk.
+  static const String channelId = 'pills_reminder_channel_v3';
+
+  /// Nama file nada di android/app/src/main/res/raw (tanpa ekstensi).
+  static const String notificationSound = 'pill_reminder';
   static const String channelName = 'Pengingat Obat';
   static const String channelDescription =
       'Notifikasi pengingat jadwal minum obat';
