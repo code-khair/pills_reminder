@@ -20,13 +20,21 @@ class MedicineLocalDataSource {
   Future<int> nextId() async {
     final current = _meta.get(AppConstants.nextIdKey, defaultValue: 1) as int;
     await _meta.put(AppConstants.nextIdKey, current + 1);
+    await _meta.flush();
     return current;
   }
 
-  Future<void> put(Medicine medicine) =>
-      _box.put(medicine.id, MedicineModel.toMap(medicine));
+  /// Menyimpan lalu langsung memaksa tulis ke disk (flush) agar data tidak
+  /// hilang bila aplikasi dimatikan paksa / dibersihkan dari recent apps.
+  Future<void> put(Medicine medicine) async {
+    await _box.put(medicine.id, MedicineModel.toMap(medicine));
+    await _box.flush();
+  }
 
-  Future<void> delete(int id) => _box.delete(id);
+  Future<void> delete(int id) async {
+    await _box.delete(id);
+    await _box.flush();
+  }
 }
 
 /// Sumber data lokal untuk riwayat konsumsi (Hive).
@@ -40,8 +48,13 @@ class IntakeLogLocalDataSource {
         .toList();
   }
 
-  Future<void> put(IntakeLog log) =>
-      _box.put(log.key, IntakeLogModel.toMap(log));
+  Future<void> put(IntakeLog log) async {
+    await _box.put(log.key, IntakeLogModel.toMap(log));
+    await _box.flush();
+  }
 
-  Future<void> delete(String key) => _box.delete(key);
+  Future<void> delete(String key) async {
+    await _box.delete(key);
+    await _box.flush();
+  }
 }

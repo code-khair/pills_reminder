@@ -87,3 +87,20 @@ if #available(iOS 10.0, *) {
   UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
 }
 ```
+
+## Pemecahan Masalah (APK terinstal di HP)
+
+- **Notifikasi tidak muncul**: pastikan manifest memuat izin + dua `<receiver>`
+  di atas (sudah disertakan di repo ini), izinkan notifikasi saat diminta, lalu
+  aktifkan "Alarm & pengingat" untuk aplikasi di Pengaturan > Aplikasi > Pills
+  Reminder (Android 12+). Menu **Tes notifikasi** harus memunculkan notifikasi
+  dalam 5 detik.
+- **HP Xiaomi/Oppo/Vivo/Samsung/Realme**: matikan penghematan baterai untuk
+  aplikasi ini (set ke "Tanpa batasan") dan aktifkan "Mulai otomatis" (autostart);
+  pabrikan ini sering membatalkan alarm aplikasi yang ditutup.
+- **Build release**: `android/app/build.gradle.kts` menonaktifkan R8 dan memuat
+  `proguard-rules.pro` agar penjadwalan notifikasi tidak rusak.
+- **Data hilang setelah memasang ulang APK**: APK release ditandatangani dengan
+  kunci debug; jika kunci berbeda dari versi terpasang, Android memaksa
+  uninstall dulu sehingga data lokal ikut terhapus. Pasang dari build yang
+  sama/kunci yang sama untuk menimpa tanpa kehilangan data.

@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:hive/hive.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:pills_reminder/core/constants/app_constants.dart';
@@ -103,16 +104,22 @@ class LocalNotificationScheduler implements ReminderScheduler {
     }
   }
 
+  static const String _exactPromptedKey = 'exact_alarm_prompted';
+
   @override
-  Future<bool> requestPermission() async {
+  Future<bool> requestPermission({bool force = false}) async {
     var granted = true;
 
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     if (android != null) {
       granted = await android.requestNotificationsPermission() ?? false;
+
+      // Alarm presisi (Android 12+). Halaman pengaturannya hanya dibuka
+      // sekali agar tidak muncul setiap aplikasi dibuka.
       final canExact = await android.canScheduleExactNotifications() ?? false;
-      if (!canExact) {
+      if (!canExact && (force || !_alreadyPromptedExact())) {
+        await _markPromptedExact();
         await android.requestExactAlarmsPermission();
       }
     }
@@ -125,6 +132,23 @@ class LocalNotificationScheduler implements ReminderScheduler {
               false;
     }
     return granted;
+  }
+
+  bool _alreadyPromptedExact() {
+    try {
+      return Hive.box(AppConstants.metaBox)
+              .get(_exactPromptedKey, defaultValue: false) as bool;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _markPromptedExact() async {
+    try {
+      final box = Hive.box(AppConstants.metaBox);
+      await box.put(_exactPromptedKey, true);
+      await box.flush();
+    } catch (_) {}
   }
 
   int _notificationId(Medicine m, int timeIndex, int weekday) =>
@@ -235,7 +259,11 @@ class LocalNotificationScheduler implements ReminderScheduler {
   @override
   Future<void> syncAll(List<Medicine> medicines) async {
     for (final m in medicines) {
-      await schedule(m);
+      try {
+        await schedule(m);
+      } catch (_) {
+        // Satu obat gagal dijadwalkan tidak boleh menghentikan yang lain.
+      }
     }
   }
 

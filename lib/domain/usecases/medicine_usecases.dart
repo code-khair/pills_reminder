@@ -15,14 +15,19 @@ class GetMedicinesUseCase {
 }
 
 /// Menyimpan obat baru lalu menjadwalkan notifikasinya.
+///
+/// Data disimpan lebih dulu. Jika penjadwalan notifikasi gagal, data tetap
+/// tersimpan dan [lastReminderFailed] bernilai true (UI bisa memberi tahu).
 class AddMedicineUseCase {
   AddMedicineUseCase(this._repository, this._scheduler);
   final MedicineRepository _repository;
   final ReminderScheduler _scheduler;
 
+  bool lastReminderFailed = false;
+
   Future<Medicine> call(Medicine medicine) async {
     final saved = await _repository.add(medicine);
-    await _scheduler.schedule(saved);
+    lastReminderFailed = !await _safeSchedule(_scheduler, saved);
     return saved;
   }
 }
@@ -33,10 +38,11 @@ class UpdateMedicineUseCase {
   final MedicineRepository _repository;
   final ReminderScheduler _scheduler;
 
+  bool lastReminderFailed = false;
+
   Future<void> call(Medicine medicine) async {
     await _repository.update(medicine);
-    await _scheduler.cancel(medicine.id);
-    await _scheduler.schedule(medicine);
+    lastReminderFailed = !await _safeSchedule(_scheduler, medicine);
   }
 }
 
@@ -47,7 +53,22 @@ class DeleteMedicineUseCase {
   final ReminderScheduler _scheduler;
 
   Future<void> call(int id) async {
-    await _scheduler.cancel(id);
+    try {
+      await _scheduler.cancel(id);
+    } catch (_) {
+      // Gagal membatalkan notifikasi tidak boleh menghalangi penghapusan data.
+    }
     await _repository.delete(id);
+  }
+}
+
+/// Menjadwalkan notifikasi tanpa pernah melempar error ke pemanggil.
+/// Mengembalikan true jika berhasil.
+Future<bool> _safeSchedule(ReminderScheduler scheduler, Medicine m) async {
+  try {
+    await scheduler.schedule(m);
+    return true;
+  } catch (_) {
+    return false;
   }
 }

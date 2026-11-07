@@ -5,7 +5,10 @@ abstract class ReminderScheduler {
   Future<void> init();
 
   /// Meminta izin notifikasi. Mengembalikan true jika diizinkan.
-  Future<bool> requestPermission();
+  ///
+  /// Halaman pengaturan "alarm presisi" hanya dibuka sekali (saat pertama
+  /// kali), kecuali [force] true (misalnya dari menu "Minta izin").
+  Future<bool> requestPermission({bool force = false});
 
   /// Menjadwalkan (ulang) seluruh pengingat milik [medicine].
   Future<void> schedule(Medicine medicine);

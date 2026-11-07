@@ -7,7 +7,6 @@ import 'package:pills_reminder/data/services/local_notification_scheduler.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Basis data lokal (Hive)
   await Hive.initFlutter();
   await Future.wait([
     Hive.openBox(AppConstants.medicinesBox),
@@ -15,9 +14,12 @@ Future<void> main() async {
     Hive.openBox(AppConstants.metaBox),
   ]);
 
-  // Layanan notifikasi lokal + zona waktu
   final scheduler = LocalNotificationScheduler();
-  await scheduler.init();
+  try {
+    await scheduler.init();
+  } catch (e, st) {
+    debugPrint('Gagal inisialisasi notifikasi: $e\n$st');
+  }
 
   runApp(PillsReminderApp(scheduler: scheduler));
 }

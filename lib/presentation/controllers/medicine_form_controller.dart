@@ -183,18 +183,31 @@ class MedicineFormController extends GetxController {
         createdAt: initial?.createdAt ?? DateTime.now(),
       );
 
+      var reminderFailed = false;
       if (isEdit) {
         await _updateMedicine(medicine);
+        reminderFailed = _updateMedicine.lastReminderFailed;
       } else {
         await _addMedicine(medicine);
+        reminderFailed = _addMedicine.lastReminderFailed;
       }
       _app.notifyDataChanged();
       Get.back();
-      Get.snackbar(
-        'Berhasil',
-        isEdit ? 'Data obat diperbarui.' : 'Obat berhasil ditambahkan.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      if (reminderFailed) {
+        Get.snackbar(
+          'Data tersimpan',
+          'Namun pengingat belum bisa dijadwalkan. Periksa izin notifikasi '
+              'dan alarm di pengaturan HP.',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 5),
+        );
+      } else {
+        Get.snackbar(
+          'Berhasil',
+          isEdit ? 'Data obat diperbarui.' : 'Obat berhasil ditambahkan.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
     } catch (e) {
       Get.snackbar('Gagal menyimpan', 'Terjadi kesalahan. Silakan coba lagi.',
           snackPosition: SnackPosition.BOTTOM);
