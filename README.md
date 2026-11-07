@@ -45,7 +45,7 @@ docs/                  Dokumentasi tambahan
 ## Cara Menjalankan
 
 ```bash
-git clone https://github.com/khair-cyber/pills_reminder.git
+git clone https://github.com/code-khair/pills_reminder.git
 cd pills_reminder
 flutter pub get
 flutter run
